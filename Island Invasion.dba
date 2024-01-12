@@ -1,0 +1,380 @@
+REM Project: Island Invasion
+REM Created: 13/02/2020 14:51:21
+REM
+REM ***** Main Source File *****
+REM
+
+REM > DEFINE CONSTANTS
+#CONSTANT playership 1
+#CONSTANT missile 2
+#CONSTANT titlescreen 3
+#CONSTANT firstenemy 4
+#CONSTANT bar 14
+#CONSTANT winnerscreen 15
+#CONSTANT loserscreen 16
+#CONSTANT backgroundsp 17
+
+REM > DEFINE DATA TYPES
+REM > VELOCITY DATA TYPE
+TYPE typev
+   speed AS INTEGER
+   angle AS INTEGER
+ENDTYPE
+
+REM > POSITION DATA TYPE
+TYPE typep
+   x AS INTEGER
+   y AS INTEGER
+ENDTYPE
+
+REM > DEFINE GLOBAL VARIABLES
+GLOBAL missilev AS typev
+GLOBAL missilep AS typep
+GLOBAL playerp AS typep
+
+REM > DEFINE SCORING SYSTEM
+GLOBAL score AS INTEGER
+score = 0
+
+REM > MAIN PROGRAM LOGIC
+InitialiseGame()
+DO
+   REM > CHECK IF missile EXISTS
+   IF SPRITE EXIST(missile)
+      HandleMissile()
+   ENDIF
+
+   REM > DISPLAY SCORE
+   ScoreSystem()
+
+   REM > HANDLE PLAYER AND ENEMIES
+   HandlePlayer()
+   HandleEnemy()
+LOOP
+END
+
+REM > START GAME
+FUNCTION InitialiseGame()
+   REM > DISPLAY
+   SET DISPLAY MODE 1440, 900, 32
+
+   REM > SET UP VELOCITY
+   missilev.speed = RND(2)/2
+   missilev.angle = 0
+
+   REM > BACKGROUND COLOUR
+   COLOR BACKDROP RGB(0,150,255)
+   BACKDROP ON
+
+   REM > MAKE ALL AREAS THAT ARE WHITE TRANSPARENT
+   SET IMAGE COLORKEY 255,255,255
+
+   REM > LOAD TITLE SCREEN
+   LOAD IMAGE "title.bmp",3
+   SPRITE titlescreen,0,20,3
+   REM > AFTER A ONE-SECOND DELAY, DELTE TITLE SCREEN SPRITE AND START GAME
+   WAIT 1000
+   DELETE SPRITE titlescreen
+
+   LOAD IMAGE "background.bmp",17
+   SPRITE backgroundsp,0,20,17
+
+   LOAD IMAGE "bar.bmp",14
+   SPRITE 14,0,850,14
+
+   REM > LOAD SCREENS FOR WINNING AND LOSING THE GAME
+   LOAD IMAGE "win.bmp",15
+   LOAD IMAGE "lose.bmp",16
+
+   REM > MAKE RED BAR SEMI-TRANSPARENT
+   SET SPRITE ALPHA 14,200
+
+   REM > LOAD FIRST ENEMY AND IMAGES - I HAVE USED MULTIPLE IMAGES TO ASSIGN DIFFERENT COLOURS
+   LOAD IMAGE "enemy.bmp",4 `red plane
+   LOAD IMAGE "enemy2.bmp",5 `yellow plane
+   LOAD IMAGE "enemy3.bmp",6 `blue plane
+   LOAD IMAGE "enemy4.bmp",7 `purple plane
+   REM SPRITE firstenemy,RND(1430),10,7
+   SPRITE firstenemy,1000,10,7
+
+   REM > ROTATE FIRST ENEMY SO IT IS FACING TOWaRDS THE PLAYER. ALL CLONED ENEMIES WILL ALSO FACE THE SAME DIRECTION
+   ROTATE SPRITE firstenemy, 180
+
+   REM > SET UP AND LOAD PLAYER SPRITE - THE COLOUR OF THE PLANE WILL BE GREEN SO IT STANDS OUT FROM THE ENEMIES
+   LOAD IMAGE "player.bmp",1
+   SPRITE playership,640,800,1
+
+   REM > LOAD IMAGE FOR MISSILES
+   LOAD IMAGE "cannon.bmp",2
+   LOAD IMAGE "enemycannon.bmp",19
+
+   REM > MAKE SHIPS SMALLER
+   SCALE SPRITE firstenemy, 7
+   SCALE SPRITE playership, 7
+
+   REM > OFFSET PLAYER SPRITE - SO ITS COORDINATES ARE AT THE CENTRE OF THE IMAGE
+   OFFSET SPRITE playership, SPRITE WIDTH(playership)/2, SPRITE HEIGHT(playership)/2
+
+   REM > CREATE ENEMIES
+   CreateEnemies()
+ENDFUNCTION
+
+REM > HANDLE PLAYER
+FUNCTION HandlePlayer()
+   REM > FIND PLANE POSITION
+   playerp.x = SPRITE X (playership)
+   playerp.y = SPRITE Y (playership)
+
+   REM > CHECK FOR KEYBOARD INPUT
+   keycode = SCANCODE()
+
+   REM > REACT TO KEY INPUT
+   SELECT keycode
+      CASE 44 `PRESS Z - GO LEFT
+         IF playerp.x > 0
+            DEC playerp.x, 1
+         ENDIF
+      ENDCASE
+      CASE 45 `PRESS X - GO RIGHT
+         IF playerp.x < 1400
+            INC playerp.x, 1
+         ENDIF
+      ENDCASE
+      CASE 57 `PRESS SPACE - FIRE A MISSILE
+         REM > A MISSILE WILL NOT BE FIRED OF ONE HAS BEEN FIRED ALREADY
+         IF NOT SPRITE EXIST(missile)
+            REM > CREATE A SPRITE ABOVE THE PLAYER - SO IT DOESN'T TOUCH THE GREEN PLANE
+            SPRITE missile, playerp.x, playerp.y - 100, 2
+
+            REM > ENEMIES FIRE THEIR OWN MISSILES - AS LONG AS THE ATTACKERS EXIST.
+            REM > MISSILES SPAWN IN FRONT OF THE ENEMIES AND MOVE FROM THEIR LEFT SIDE
+            IF SPRITE EXIST (firstenemy)
+               SPRITE 19, SPRITE X (firstenemy), SPRITE Y (firstenemy), 19
+               OFFSET SPRITE 19, SPRITE WIDTH(19)/2, 0
+            ENDIF
+
+            IF SPRITE EXIST (5)
+               SPRITE 20, SPRITE X (5), SPRITE Y (5), 19
+               OFFSET SPRITE 20, SPRITE WIDTH(20)/2, 0
+            ENDIF
+
+            IF SPRITE EXIST (6)
+               SPRITE 21, SPRITE X (6), SPRITE Y (6), 19
+               OFFSET SPRITE 21, SPRITE WIDTH(21)/2, 0
+            ENDIF
+
+            IF SPRITE EXIST (7)
+               SPRITE 22, SPRITE X (7), SPRITE Y (7), 19
+               OFFSET SPRITE 22, SPRITE WIDTH(22)/2, 0
+            ENDIF
+
+            IF SPRITE EXIST (8)
+               SPRITE 23, SPRITE X (8), SPRITE Y (8), 19
+               OFFSET SPRITE 23, SPRITE WIDTH(23)/2, 0
+            ENDIF
+
+            IF SPRITE EXIST (9)
+               SPRITE 24, SPRITE X (9), SPRITE Y (9), 19
+               OFFSET SPRITE 24, SPRITE WIDTH(24)/2, 0
+            ENDIF
+
+            IF SPRITE EXIST (10)
+               SPRITE 25, SPRITE X (10), SPRITE Y (10), 19
+               OFFSET SPRITE 25, SPRITE WIDTH(25)/2, 0
+            ENDIF
+
+            IF SPRITE EXIST (11)
+               SPRITE 26, SPRITE X (11), SPRITE Y (11), 19
+               OFFSET SPRITE 26, SPRITE WIDTH(26)/2, 0
+            ENDIF
+
+            IF SPRITE EXIST (12)
+               SPRITE 27, SPRITE X (12), SPRITE Y (12), 19
+               OFFSET SPRITE 27, SPRITE WIDTH(27)/2, 0
+            ENDIF
+
+            IF SPRITE EXIST (13)
+               SPRITE 28, SPRITE X (13), SPRITE Y (13), 19
+               OFFSET SPRITE 28, SPRITE WIDTH(28)/2, 0
+            ENDIF
+
+         ENDIF
+      ENDCASE
+   ENDSELECT
+
+   REM > MOVE PLAYER TO NEW POSITION
+   SPRITE playership, playerp.x, playerp.y, 1
+
+   REM > UNUSED CODE
+   REMSTART
+   REM > DETECT PLAYER POSITION WITH ENEMIES - IF IT HITS ANYTHING, THE PLAYER LOSES
+   FOR enemyno = 4 TO 13
+      IF SPRITE HIT (playership, enemyno)
+         REM > DISPLAY SCORE
+         PRINT "Score: ", score
+         SET CURSOR 0,0
+
+         REM > LOAD BACKGROUND FOR LOSING THE GAME
+         SPRITE loserscreen,0,20,17
+         WAIT 1000
+         END
+      ENDIF
+   NEXT enemyno
+   REMEND
+ENDFUNCTION
+
+REM > CREATE CLONES
+FUNCTION CreateEnemies()
+   spriteno = 5
+   FOR spriteno = firstenemy + 1 TO firstenemy + 9
+      CLONE SPRITE firstenemy, spriteno
+      REM > DETERMINE WHAT COLOUR THE PLANE WILL BE USING A VARIABLE "imgno" - THE VALUE WILL BE 1, 2 OR 3 WHEN AN ENEMY SPAWNS
+      REM > NOTE: THE RANDOM ASSIGNMENT OF COLOURS ONLY APPLIES TO CLONED ENEMIES - THE FIRST ONE WILL ALWAYS BE PURPLE
+      imgno = RND(3)
+      IF imgno = 1
+         REM > USE RED PLANE IMAGE
+         SPRITE spriteno,RND(1430),10,4
+      ELSE
+         IF imgno = 2
+            REM > USE YELLOW PLANE IMAGE
+            SPRITE spriteno,RND(1430),10,5
+         ELSE
+            REM > USE BLUE PLANE IMAGE
+            SPRITE spriteno,RND(1430),10,6
+         ENDIF
+      ENDIF
+      WAIT 10
+      ROTATE SPRITE firstenemy,180
+   NEXT spriteno
+
+   REM > OFFSET ENEMY SPRITES
+   OFFSET SPRITE firstenemy, SPRITE WIDTH(firstenemy)/2, SPRITE HEIGHT(firstenemy)/2
+   OFFSET SPRITE 5, SPRITE WIDTH(5)/2, SPRITE HEIGHT(5)/2
+   OFFSET SPRITE 6, SPRITE WIDTH(6)/2, SPRITE HEIGHT(6)/2
+   OFFSET SPRITE 7, SPRITE WIDTH(7)/2, SPRITE HEIGHT(7)/2
+   OFFSET SPRITE 8, SPRITE WIDTH(8)/2, SPRITE HEIGHT(8)/2
+   OFFSET SPRITE 9, SPRITE WIDTH(9)/2, SPRITE HEIGHT(9)/2
+   OFFSET SPRITE 10, SPRITE WIDTH(10)/2, SPRITE HEIGHT(10)/2
+   OFFSET SPRITE 11, SPRITE WIDTH(11)/2, SPRITE HEIGHT(11)/2
+   OFFSET SPRITE 12, SPRITE WIDTH(12)/2, SPRITE HEIGHT(12)/2
+   OFFSET SPRITE 13, SPRITE WIDTH(13)/2, SPRITE HEIGHT(13)/2
+ENDFUNCTION
+
+REM > HANDLE ENEMIES
+FUNCTION HandleEnemy()
+REM > UNLESS DESTROYED BY PLAYER, MOVE TOWARDS PLAYER
+REM > IF ANY ENEMY TOUCHES THE RED BAR OR THE PLAYER, THE GAME ENDS IN FAILURE
+    FOR enemyno = 4 TO 13
+      IF SPRITE EXIST (enemyno)
+         MOVE SPRITE enemyno, 0.00525
+         IF (SPRITE HIT (playership, enemyno)) OR (SPRITE HIT (enemyno, bar))
+            REM > LOAD BACKGROUND FOR LOSING THE GAME
+            SPRITE loserscreen,0,0,16
+            WAIT 1000
+            END
+         ENDIF
+      ENDIF
+    NEXT enemyno
+
+REM > IF A PLAYER TOUCHES A MISILE, THE GAME ENDS IN FAILURE
+    FOR missileno = 19 TO 28
+      IF SPRITE EXIST (missileno)
+         IF SPRITE HIT (playership, missileno)
+            REM > LOAD BACKGROUND FOR LOSING THE GAME
+            SPRITE loserscreen,0,0,16
+            WAIT 1000
+            END
+         ENDIF
+      ENDIF
+    NEXT missileno
+
+   REM > IF ALL ENEMIES ARE DESTROYED, THE PLAYER WINS
+   IF (NOT SPRITE EXIST (4)) AND (NOT SPRITE EXIST (5)) AND (NOT SPRITE EXIST (6)) AND (NOT SPRITE EXIST (7)) AND (NOT SPRITE EXIST (8)) AND (NOT SPRITE EXIST (9)) AND (NOT SPRITE EXIST (10)) AND (NOT SPRITE EXIST (11)) AND (NOT SPRITE EXIST (12)) AND (NOT SPRITE EXIST (13))
+      REM > LOAD BACKGROUND FOR WINNING THE GAME
+      SPRITE winnerscreen,0,20,15
+      WAIT 1000
+      END
+   ENDIF
+ENDFUNCTION
+
+REM > HANDLE MISSILES
+FUNCTION HandleMissile()
+   REM > FIRE MISSILES - PLAYER MISSILE MOVES UPWARDS.
+   MOVE SPRITE missile, missilev.speed
+
+   REM > ENEMY MISSILES MOVE IN THE OPPOSITE DIRECTION (AS LONG AS THEY AND THE ATTACKERS ARE NOT DEFEATED)
+   IF SPRITE EXIST (19)
+      MOVE SPRITE 19, -RND(2)/2
+   ENDIF
+
+   IF SPRITE EXIST (20)
+      MOVE SPRITE 20, -RND(2)/2
+   ENDIF
+
+   IF SPRITE EXIST (21)
+      MOVE SPRITE 21, -RND(2)/2
+   ENDIF
+
+   IF SPRITE EXIST (22)
+      MOVE SPRITE 22, -RND(2)/2
+   ENDIF
+
+
+   IF SPRITE EXIST (23)
+      MOVE SPRITE 23, -RND(2)/2
+   ENDIF
+
+   IF SPRITE EXIST (24)
+      MOVE SPRITE 24, -RND(2)/2
+   ENDIF
+
+   IF SPRITE EXIST (25)
+      MOVE SPRITE 25, -RND(2)/2
+   ENDIF
+
+   IF SPRITE EXIST (26)
+      MOVE SPRITE 26, -RND(2)/2
+   ENDIF
+
+   IF SPRITE EXIST (27)
+      MOVE SPRITE 27, -RND(2)/2
+   ENDIF
+
+   IF SPRITE EXIST (28)
+      MOVE SPRITE 28, -RND(2)/2
+   ENDIF
+
+   REM > IF THE PLAYER'S MISSILE HITS AN ENEMY, THEY WILL BE DESTORYED. ENEMY MISSILES WILL ALSO BE DETONATED IF TOUCHED.
+   REM > THE PLAYER EARNS A POINT FOR ANYTHING DESTORYED
+   FOR enemyno = 4 TO 13
+   IF SPRITE EXIST (enemyno)
+      IF SPRITE EXIST (missile)
+         IF SPRITE HIT (missile,enemyno)
+            DELETE SPRITE enemyno
+            REM DELETE SPRITE missile
+            score = score + 1
+         ENDIF
+      ENDIF
+   ENDIF
+   NEXT enemyno
+   REM > IF PLAYER MISSES, THE MISSILE WILL BE DELETED ONCE IT GOES BEYOND THE TOP OF THE SCREEN AND THE ENEMEY MISSILES HAVE REACHED THE BOTTOM OF THE SCREEN
+   IF SPRITE EXIST (missile)
+      IF SPRITE Y(missile) < -2000
+         DELETE SPRITE missile
+      ENDIF
+   ENDIF
+
+   FOR missileno = 19 TO 28
+      IF SPRITE EXIST (missileno)
+         IF SPRITE Y (missileno) > 900
+            DELETE SPRITE missileno
+         ENDIF
+      ENDIF
+   NEXT missileno
+ENDFUNCTION
+
+FUNCTION ScoreSystem()
+   REM > DISPLAY SCORE OVER TIME ON THE TOP LEFT OF THE SCREEN
+   PRINT "Score: ", score
+   SET CURSOR 0,0
+ENDFUNCTION
